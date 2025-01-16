@@ -8,12 +8,21 @@ class Entity{
   }
 
   update(){
-    this.x = this.lane;
-    this.y += this.speed;
-    this.speed = this.road.speed + random(0.01)-0.01/2;
+    this.x = this.lane.x;
+    this.y += this.speed*dt;
+    this.speed = this.lane.speed + noise(frameCount + this.y*10)*sNoise-sNoise/2;
+    this.outOfBounds();
+  }
+
+  outOfBounds(){
+    if(this.y>windowHeight){
+      this.y = 0;
+    }
   }
 
   show(){
-    ellipse(this.x,this.y,10);
+    let mappedColor = map(this.speed, 0 , 20, 0 , 300);
+    fill(mappedColor,50,50)
+    ellipse(this.x,this.y,15);
   }
 }

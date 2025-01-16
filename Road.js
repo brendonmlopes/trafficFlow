@@ -3,12 +3,14 @@ class Lane{
     this.p = [];
     this.speed = average(this.p);
     this.width = undefined;
-    this.x = undefined; 
+    this.x = undefined;
   }
 
   addEntity(entity){
     this.p.push(entity);
     this.speed = average(this.p);
+    entity.x = this.x;
+    entity.lane = this;
   }
 
   removeEntity(){
@@ -21,4 +23,5 @@ class Lane{
       el.show()
     }
   }
+
 }
