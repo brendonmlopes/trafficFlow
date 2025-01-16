@@ -13,6 +13,12 @@ class Lane{
     entity.lane = this;
   }
 
+  moveEntity(otherLane){
+    let ent = this.p[this.p.length-1];
+    otherLane.addEntity(ent);
+    this.pop();
+  }
+
   removeEntity(){
     this.p.pop();
     this.speed = average(this.p);

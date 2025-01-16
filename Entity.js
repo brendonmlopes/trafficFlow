@@ -1,28 +1,24 @@
-class Entity{
-
-  constructor(){
-    this.lane = undefined;
-    this.speed = undefined;
-    this.x = undefined;
-    this.y = undefined;
+class Entity {
+  constructor() {
+    this.x = 0;
+    this.y = random(windowHeight);
+    this.speed = 1;
+    this.lane = null;
   }
 
-  update(){
-    this.x = this.lane.x;
-    this.y += this.speed*dt;
-    this.speed = this.lane.speed + noise(frameCount + this.y*10)*sNoise-sNoise/2;
-    this.outOfBounds();
-  }
+  update() {
+    this.y += this.speed;
 
-  outOfBounds(){
-    if(this.y>windowHeight){
+    // Ensure it doesn't go out of bounds
+    if (this.y > windowHeight) {
       this.y = 0;
     }
+
+    console.log(`Entity in lane ${this.lane ? lanes.indexOf(this.lane) : 'N/A'} at y=${this.y}`);
   }
 
-  show(){
-    let mappedColor = map(this.speed, 0 , 20, 0 , 300);
-    fill(mappedColor,50,50)
-    ellipse(this.x,this.y,15);
+  show() {
+    fill(255, 0, 0);
+    ellipse(this.x, this.y, 10, 10);
   }
 }
