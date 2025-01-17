@@ -1,9 +1,11 @@
 
 let lanes = []
-let nLanes = 3;
+let nLanes = 20;
 const dt = 0.01;
 const sNoise = 0.1;
 let k = [];
+
+let mostOccupied = 0;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -68,7 +70,7 @@ function draw() {
       el.show();
     }
   }
-
+  push()
   // Apply Runge-Kutta Integration for population change
   for (let i = 0; i < lanes.length; i++) {
     let lane = lanes[i];
@@ -86,7 +88,20 @@ function draw() {
 
     console.log(`Lane ${i} | Current: ${pop}, New: ${newPop}`);
     moveEntitiesBetweenLanes(i, newPop);
+
+    fill(255);
+    noStroke();
+    mostOccupied = lane.p.length > mostOccupied ? lane.p.length : mostOccupied;
+    if(lane.p.length === mostOccupied){
+      fill(0,100,50)
+      ellipse(lane.x+20, windowHeight - 70, 10)
+    }else{
+      fill(100,100,100)
+    }
+
+      text( lane.p.length , lane.x+10 , windowHeight - 50 )
   }
+  pop()
 }
 
 // Function to compute dp/dt based on the transport model
@@ -114,11 +129,11 @@ function dpdt(pop, pPop, nPop, i) {
     }
 
     let dp = inflow - outflow + k[i][5] - k[i][6];
-
-    if (isNaN(dp)) {
-        console.error(`NaN detected in dpdt for lane ${i}. Values: pop=${pop}, pPop=${pPop}, nPop=${nPop}, speed=${speed}, prevSpeed=${prevSpeed}, nextSpeed=${nextSpeed}`);
-        dp = 0; // Prevent breaking the simulation
-    }
+    //
+    // if (isNaN(dp)) {
+    //     console.error(`NaN detected in dpdt for lane ${i}. Values: pop=${pop}, pPop=${pPop}, nPop=${nPop}, speed=${speed}, prevSpeed=${prevSpeed}, nextSpeed=${nextSpeed}`);
+    //     dp = 0; // Prevent breaking the simulation
+    // }
 
     return dp;
 }
@@ -131,34 +146,35 @@ function moveEntitiesBetweenLanes(i, newPop) {
   let currentPop = lane.p.length;
   let diff = Math.round(newPop - currentPop);
 
-  console.log(`Lane ${i} | Current: ${currentPop}, New: ${newPop}, Diff: ${diff}`);
+  // console.log(`Lane ${i} | Current: ${currentPop}, New: ${newPop}, Diff: ${diff}`);
 
   let moved = 0;
 
   if (diff > 0) {
-    // Need to pull entities from neighboring lanes
-    if (i > 0 && lanes[i - 1].p.length > 0) {
-      let numToMove = Math.min(lanes[i - 1].p.length, Math.ceil(k[i][0] * diff));
+    // Need to pull entities from neighboring lanes, but not empty them
+    if (i > 0 && lanes[i - 1].p.length > 2) {
+      let numToMove = Math.min(lanes[i - 1].p.length - 1, Math.ceil(k[i][0] * diff));
       moved += transferEntities(lanes[i - 1], lane, numToMove);
     }
-    if (i < lanes.length - 1 && lanes[i + 1].p.length > 0) {
-      let numToMove = Math.min(lanes[i + 1].p.length, Math.ceil(k[i][1] * diff));
+    if (i < lanes.length - 1 && lanes[i + 1].p.length > 2) {
+      let numToMove = Math.min(lanes[i + 1].p.length - 1, Math.ceil(k[i][1] * diff));
       moved += transferEntities(lanes[i + 1], lane, numToMove);
     }
   } else if (diff < 0) {
-    // Need to move entities out
-    if (i > 0 && lane.p.length > 0) {
-      let numToMove = Math.min(lane.p.length, Math.abs(Math.floor(k[i][2] * diff)));
+    // Need to move entities out, but not empty this lane
+    if (i > 0 && lane.p.length > 2) {
+      let numToMove = Math.min(lane.p.length - 1, Math.abs(Math.floor(k[i][2] * diff)));
       moved += transferEntities(lane, lanes[i - 1], numToMove);
     }
-    if (i < lanes.length - 1 && lane.p.length > 0) {
-      let numToMove = Math.min(lane.p.length, Math.abs(Math.floor(k[i][3] * diff)));
+    if (i < lanes.length - 1 && lane.p.length > 2) {
+      let numToMove = Math.min(lane.p.length - 1, Math.abs(Math.floor(k[i][3] * diff)));
       moved += transferEntities(lane, lanes[i + 1], numToMove);
     }
   }
 
-  console.log(`Lane ${i} moved/pulled ${moved} entities, now has ${lane.p.length}.`);
+  // console.log(`Lane ${i} moved/pulled ${moved} entities, now has ${lane.p.length}.`);
 }
+
 
 
 
@@ -174,19 +190,26 @@ function transferEntities(fromLane, toLane, numEntities) {
       entity.lane = toLane;
       toLane.p.push(entity);
 
-      // Fix NaN issue by reassigning y position if it becomes undefined
+      // Ensure speed is never lost
+      if (isNaN(entity.speed) || entity.speed === undefined) {
+        entity.speed = random(2, 5);
+        // console.warn(`Fixed NaN speed for entity in lane ${lanes.indexOf(toLane)}`);
+      }
+
+      // Ensure y is within bounds
       if (isNaN(entity.y) || entity.y === undefined) {
         entity.y = random(windowHeight);
-        console.warn(`Fixed NaN position for entity in lane ${lanes.indexOf(toLane)}`);
+        // console.warn(`Fixed NaN position for entity in lane ${lanes.indexOf(toLane)}`);
       }
 
       actualMoved++;
     }
   }
 
-  console.log(`Transferred ${actualMoved} entities from Lane ${lanes.indexOf(fromLane)} to Lane ${lanes.indexOf(toLane)}.`);
+  // console.log(`Transferred ${actualMoved} entities from Lane ${lanes.indexOf(fromLane)} to Lane ${lanes.indexOf(toLane)}.`);
   return actualMoved;
 }
+
 
 
 

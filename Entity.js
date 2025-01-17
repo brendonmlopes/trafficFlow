@@ -14,11 +14,12 @@ class Entity {
       this.y = 0;
     }
 
-    console.log(`Entity in lane ${this.lane ? lanes.indexOf(this.lane) : 'N/A'} at y=${this.y}`);
+    // console.log(`Entity in lane ${this.lane ? lanes.indexOf(this.lane) : 'N/A'} at y=${this.y}`);
   }
 
   show() {
-    fill(255, 0, 0);
+    let c = map(this.x, 0 , windowWidth, 0 , 360)
+    fill(c,50,50)
     ellipse(this.x, this.y, 10, 10);
   }
 }
