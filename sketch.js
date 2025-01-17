@@ -1,10 +1,9 @@
 
 let lanes = []
-let nLanes = 20;
-const dt = 0.01;
-const sNoise = 0.1;
+let nLanes = 8;
+const dt = 0.00000001;
 let k = [];
-
+let populations = [];
 let mostOccupied = 0;
 
 function setup() {
@@ -28,9 +27,9 @@ function setup() {
     if (i === 0) {
       k.push([0, 1, 0, 1, 1, 0, 0]);
     } else if (i === nLanes + 1) {
-      k.push([1, 1, 1, 1, 1, 1, 0]);
+      k.push([1, 1, 1, 1, 1, 0, 0]);
     } else {
-      k.push([1, 1, 1, 1, 1, 0, 1]);
+      k.push([1, 1, 1, 1, 1, 0, 0]);
     }
   }
 
@@ -46,30 +45,41 @@ for (let i = 0; i < nLanes; i++) {
 
     lane.width = (windowWidth - 200) / nLanes;
     lane.x = (windowWidth - 200) / nLanes * (i + 2 / 3);
-}
+
+  }
 
   // Create entities
   for (let lane of lanes) {
-    createEntities(100, lane);
+    createEntities(random(50,100), lane);
   }
 
-  // Initialize entities' values
+  // Initialize entities' values and updating populations
   for (let lane of lanes) {
     for (let el of lane.p) {
       el.y = random(windowHeight);
     }
+    populations.push(lane.p.length)
   }
+
 }
 function draw() {
   background(0);
 
+  // Update entities before drawing
   for (let lane of lanes) {
-    lane.showEntities();
     for (let el of lane.p) {
       el.update();
-      el.show();
     }
   }
+  //update populations array
+  for(let i = 0 ; i < lanes.length ; i++){
+    populations[i] = lanes[i].p.length;
+  }
+  // Render entities and text after updates
+  for (let lane of lanes) {
+    lane.showEntities();
+  }
+
   push()
   // Apply Runge-Kutta Integration for population change
   for (let i = 0; i < lanes.length; i++) {
@@ -86,22 +96,24 @@ function draw() {
 
     let newPop = Math.max(1, pop + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4)); // Ensure minimum 1
 
-    console.log(`Lane ${i} | Current: ${pop}, New: ${newPop}`);
+    // console.log(`Lane ${i} | Current: ${pop}, New: ${newPop}`);
     moveEntitiesBetweenLanes(i, newPop);
 
     fill(255);
     noStroke();
-    mostOccupied = lane.p.length > mostOccupied ? lane.p.length : mostOccupied;
-    if(lane.p.length === mostOccupied){
+    mostOccupied = max(populations)
+    if(lane.p.length >= mostOccupied){
       fill(0,100,50)
       ellipse(lane.x+20, windowHeight - 70, 10)
     }else{
       fill(100,100,100)
     }
+    // console.log(`Lane ${i}: pop=${pop}, dpdt=${dpdt(pop, pPop, nPop, i)}`);
 
       text( lane.p.length , lane.x+10 , windowHeight - 50 )
   }
   pop()
+
 }
 
 // Function to compute dp/dt based on the transport model
@@ -129,11 +141,11 @@ function dpdt(pop, pPop, nPop, i) {
     }
 
     let dp = inflow - outflow + k[i][5] - k[i][6];
-    //
-    // if (isNaN(dp)) {
-    //     console.error(`NaN detected in dpdt for lane ${i}. Values: pop=${pop}, pPop=${pPop}, nPop=${nPop}, speed=${speed}, prevSpeed=${prevSpeed}, nextSpeed=${nextSpeed}`);
-    //     dp = 0; // Prevent breaking the simulation
-    // }
+    
+    if (isNaN(dp)) {
+        console.error(`NaN detected in dpdt for lane ${i}. Values: pop=${pop}, pPop=${pPop}, nPop=${nPop}, speed=${speed}, prevSpeed=${prevSpeed}, nextSpeed=${nextSpeed}`);
+        dp = 0; // Prevent breaking the simulation
+    }
 
     return dp;
 }
@@ -227,19 +239,26 @@ function updateLanePopulation(lane, oldPop, newPop) {
 }
 
 function createEntities(n, lane) {
+  // for (let i = 0; i < n; i++) {
+  //   let entity = new Entity();
+  //   entity.lane = lane;
+  //   entity.speed = lane.speed;
+  //   lane.addEntity(entity);
+  // }
   for (let i = 0; i < n; i++) {
     let entity = new Entity();
     entity.lane = lane;
-    entity.speed = lane.speed;
+    entity.x = lane.x;
+    entity.y = i * 15;  // Ensure vertical separation
     lane.addEntity(entity);
-  }
+}
 }
 
-function average(list){
+function averageSpeed(list){
   let counter = 0;
   for(let el of list){
-    counter+=el;
+    counter+=el.speed;
   }
-  counter/= list.length;
+  counter /= list.length;
   return counter;
 }
