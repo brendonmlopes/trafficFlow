@@ -16,7 +16,7 @@
 
 ## 🖼️ Screenshots
 
-![trafficFlowJS](https://github.com/user-attachments/assets/3ed95801-6e7a-4014-96d1-ed34e85a8c5f)
+![trafficFlowJS](https://github.com/user-attachments/assets/34309758-e5ef-45aa-a06c-b309e0af376a)
 
 > _A screenshot of trafficFlowJS running with dynamic entities moving through lanes._
 
