@@ -1,18 +1,23 @@
-
 let lanes = []
-let nLanes = 8;
-const dt = 0.00000001;
 let k = [];
 let populations = [];
 let mostOccupied = 0;
 
+let nLanes = 5;
+let latency = 30;
+const dt = 0.001;
+const maxSpeed = 20;
+const carsPerLane = 100;
+const randomize = true;
+
 function setup() {
+  console.log("Called Setup");
+
   createCanvas(windowWidth, windowHeight);
   stroke(255);
   fill(255);
   colorMode(HSL);
-  frameRate(20);
-  console.log("Called Setup");
+  rectMode(CENTER);
 
 //// Create the transport matrix
   //0 [k(i-1)(i)]
@@ -23,13 +28,13 @@ function setup() {
   //5 [epsilon]
   //6 [sigma]
 
-  for (let i = 0; i < nLanes + 2; i++) {
+  for (let i = 0; i < nLanes; i++) {
     if (i === 0) {
       k.push([0, 1, 0, 1, 1, 0, 0]);
-    } else if (i === nLanes + 1) {
+    } else if (i <= nLanes-2 && i>=1) {
       k.push([1, 1, 1, 1, 1, 0, 0]);
     } else {
-      k.push([1, 1, 1, 1, 1, 0, 0]);
+      k.push([1, 0, 1, 0, 1, 0, 0]);
     }
   }
 
@@ -38,9 +43,9 @@ for (let i = 0; i < nLanes; i++) {
     let lane = new Lane();
     lanes.push(lane);
 
-    lane.speed = random(5, 10);  // Ensure it's always a number
+    lane.speed = random(5, 10);
     if (isNaN(lane.speed) || lane.speed <= 0) {
-        lane.speed = 5; // Default fallback speed to avoid NaN
+        lane.speed = 5;
     }
 
     lane.width = (windowWidth - 200) / nLanes;
@@ -50,20 +55,23 @@ for (let i = 0; i < nLanes; i++) {
 
   // Create entities
   for (let lane of lanes) {
-    createEntities(random(50,100), lane);
+
+    createEntities(randomize ? random(0,carsPerLane):carsPerLane, lane);
   }
 
   // Initialize entities' values and updating populations
   for (let lane of lanes) {
     for (let el of lane.p) {
-      el.y = random(windowHeight);
+      el.initialize();
     }
-    populations.push(lane.p.length)
+    populations.push(lane.p.length);
   }
 
 }
+
 function draw() {
   background(0);
+  showLanes(lanes);
 
   // Update entities before drawing
   for (let lane of lanes) {
@@ -99,6 +107,7 @@ function draw() {
     // console.log(`Lane ${i} | Current: ${pop}, New: ${newPop}`);
     moveEntitiesBetweenLanes(i, newPop);
 
+    //find and render a pointer to the lane with most entities
     fill(255);
     noStroke();
     mostOccupied = max(populations)
@@ -113,7 +122,7 @@ function draw() {
       text( lane.p.length , lane.x+10 , windowHeight - 50 )
   }
   pop()
-
+  showSpeeds(lanes)
 }
 
 // Function to compute dp/dt based on the transport model
@@ -141,10 +150,10 @@ function dpdt(pop, pPop, nPop, i) {
     }
 
     let dp = inflow - outflow + k[i][5] - k[i][6];
-    
+
     if (isNaN(dp)) {
         console.error(`NaN detected in dpdt for lane ${i}. Values: pop=${pop}, pPop=${pPop}, nPop=${nPop}, speed=${speed}, prevSpeed=${prevSpeed}, nextSpeed=${nextSpeed}`);
-        dp = 0; // Prevent breaking the simulation
+        dp = 0;
     }
 
     return dp;
@@ -198,9 +207,14 @@ function transferEntities(fromLane, toLane, numEntities) {
 
   for (let i = 0; i < numEntities; i++) {
     if (fromLane.p.length > 0) {
-      let entity = fromLane.p.pop();
-      entity.lane = toLane;
-      toLane.p.push(entity);
+      let entity = fromLane.p[fromLane.p.length-1];
+      if(!entity.changed){
+        fromLane.p.pop();
+        entity.changed = true;
+        entity.lastLane = fromLane;
+        entity.lane = toLane;
+        toLane.p.push(entity);
+      }
 
       // Ensure speed is never lost
       if (isNaN(entity.speed) || entity.speed === undefined) {
@@ -221,9 +235,6 @@ function transferEntities(fromLane, toLane, numEntities) {
   // console.log(`Transferred ${actualMoved} entities from Lane ${lanes.indexOf(fromLane)} to Lane ${lanes.indexOf(toLane)}.`);
   return actualMoved;
 }
-
-
-
 
 // Function to update lane population based on RK4 output
 function updateLanePopulation(lane, oldPop, newPop) {
@@ -251,7 +262,7 @@ function createEntities(n, lane) {
     entity.x = lane.x;
     entity.y = i * 15;  // Ensure vertical separation
     lane.addEntity(entity);
-}
+  }
 }
 
 function averageSpeed(list){
@@ -261,4 +272,26 @@ function averageSpeed(list){
   }
   counter /= list.length;
   return counter;
+}
+
+
+function showSpeeds(listOfLanes){
+  push();
+  rectMode(CENTER);
+  for(let lane of lanes){
+    fill(0);
+    stroke(255);
+    rect(lane.x,53,50,-38);
+    fill(255);
+    text("Speed",lane.x-20,50);
+    noStroke();
+    text(round(lane.speed,4),lane.x-20,65);
+  }
+  pop();
+}
+
+function showLanes(listOfLanes){
+  for (const lane of listOfLanes) {
+    lane.show();
+  }
 }
