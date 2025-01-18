@@ -16,7 +16,8 @@
 
 ## 🖼️ Screenshots
 
-![trafficFlowJS](https://github.com/user-attachments/assets/34309758-e5ef-45aa-a06c-b309e0af376a)
+![trafficFlowJS](https://github.com/user-attachments/assets/92646b67-55ab-41fb-b620-729bac7f4533)
+
 
 > _A screenshot of trafficFlowJS running with dynamic entities moving through lanes._
 
@@ -125,7 +126,7 @@ Modify the transport matrix (`k`) to customize lane interactions:
 - `[k[i][1]]`: Multiplier of cars coming from the next lane to the ith lane.
 - `[k[i][2]]`: Multiplier of cars going from the ith lane to the previous lane.
 - `[k[i][3]]`: Multiplier of cars going from the ith lane to the next lane.
--![Uploading CodeCogsEqn (4).png…]()`[k[i][4]]`: Lane-specific decay factor, a multiplier of how "satisfied" the driver on the ith lane is being there.
+- `[k[i][4]]`: Lane-specific decay factor, a multiplier of how "satisfied" the driver on the ith lane is being there.
 - `[k[i][5]]` & `[k[i][6]]`: epsilon and sigma.
 
 ---
